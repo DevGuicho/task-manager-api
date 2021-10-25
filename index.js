@@ -1,6 +1,7 @@
 const debug = require('debug')('app:server')
 const express = require('express')
 const passport = require('passport')
+const cors = require('cors')
 
 const { port } = require('./config')
 const {
@@ -16,6 +17,7 @@ const app = express()
 require('./lib/db')
 
 app.use(passport.initialize())
+app.use(cors())
 app.use(express.json())
 
 taskApi(app)
