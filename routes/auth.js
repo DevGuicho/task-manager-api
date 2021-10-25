@@ -3,9 +3,11 @@ const passport = require('passport')
 const { emailValidation } = require('../middlewares/dbValidations')
 const validationHandler = require('../middlewares/validationHandler')
 const AuthServices = require('../services/auth')
-const { registerSchema, loginSchema } = require('../utils/schemas/AuthSchema')
+const createToken = require('../utils/createToken')
+const { registerSchema } = require('../utils/schemas/AuthSchema')
 
 require('../utils/strategies/jwt')
+require('../utils/strategies/basic')
 
 function authApi(app) {
   const router = express.Router()
@@ -30,28 +32,24 @@ function authApi(app) {
       })
     }
   )
-  router.post(
-    '/sign-in',
-    validationHandler(loginSchema),
-    async (req, res, next) => {
-      const { email, password } = req.body
 
-      const { err, token, user } = await authServices.login({ email, password })
-
-      if (err) {
+  router.get('/sign-in', function (req, res, next) {
+    passport.authenticate('basic', function (err, user) {
+      if (err || !user) {
         return next(err)
       }
-
-      res.json({
-        message: 'Sign in successfull',
-        data: {
-          user,
-          token
+      req.login(user, { session: false }, function (err) {
+        if (err) {
+          return next(err)
         }
+        const token = createToken(user)
+        res.json({
+          message: 'hola mundo',
+          data: { user, token }
+        })
       })
-    }
-  )
-
+    })(req, res, next)
+  })
   router.get(
     '/',
     passport.authenticate('jwt', { session: false }),

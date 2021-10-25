@@ -1,20 +1,9 @@
 const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const { secret } = require('../config')
+
 const boom = require('@hapi/boom')
 
 const User = require('../models/User')
-
-const createToken = (user) => {
-  const payload = {
-    id: user._id,
-    email: user.email,
-    name: user.name
-  }
-  const token = jwt.sign(payload, secret)
-
-  return token
-}
+const createToken = require('../utils/createToken')
 
 class AuthServices {
   async createUser({ user }) {
