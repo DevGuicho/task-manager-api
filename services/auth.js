@@ -5,6 +5,17 @@ const boom = require('@hapi/boom')
 
 const User = require('../models/User')
 
+const createToken = (user) => {
+  const payload = {
+    id: user._id,
+    email: user.email,
+    name: user.name
+  }
+  const token = jwt.sign(payload, secret)
+
+  return token
+}
+
 class AuthServices {
   async createUser({ user }) {
     const { password, ...restUser } = user
@@ -12,7 +23,11 @@ class AuthServices {
 
     const newUser = new User({ password: hashedPassword, ...restUser })
 
-    return newUser.save()
+    const userSaved = await newUser.save()
+
+    const token = createToken(userSaved)
+
+    return { token, user: userSaved }
   }
 
   async login({ email, password }) {
@@ -27,12 +42,7 @@ class AuthServices {
       return { err: boom.unauthorized('Email or password incorrect') }
     }
 
-    const payload = {
-      id: user._id,
-      email: user.email,
-      name: user.name
-    }
-    const token = jwt.sign(payload, secret)
+    const token = createToken(user)
     return { token, user }
   }
 }
