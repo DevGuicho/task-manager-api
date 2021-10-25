@@ -1,8 +1,11 @@
 const express = require('express')
+const passport = require('passport')
 const { emailValidation } = require('../middlewares/dbValidations')
 const validationHandler = require('../middlewares/validationHandler')
 const AuthServices = require('../services/auth')
 const { registerSchema, loginSchema } = require('../utils/schemas/AuthSchema')
+
+require('../utils/strategies/jwt')
 
 function authApi(app) {
   const router = express.Router()
@@ -17,11 +20,13 @@ function authApi(app) {
     async (req, res) => {
       const user = req.body
 
-      const userCreated = await authServices.createUser({ user })
+      const { user: userCreated, token } = await authServices.createUser({
+        user
+      })
 
       res.status(201).json({
         message: 'Sign up successfull',
-        data: userCreated
+        data: { user: userCreated, token }
       })
     }
   )
@@ -42,6 +47,19 @@ function authApi(app) {
         data: {
           user,
           token
+        }
+      })
+    }
+  )
+
+  router.get(
+    '/',
+    passport.authenticate('jwt', { session: false }),
+    async (req, res, next) => {
+      res.json({
+        message: 'User listed',
+        data: {
+          user: req.user
         }
       })
     }
